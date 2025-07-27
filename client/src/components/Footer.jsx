@@ -1,6 +1,5 @@
-<<<<<<< HEAD
-import React from 'react';
 
+import React from 'react';
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 pt-10 pb-6 mt-12">
@@ -65,5 +64,4 @@ const Footer = () => {
 };
 
 export default Footer;
-=======
->>>>>>> e6952ca (added animation)
+
