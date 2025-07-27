@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const dashboardRoutes = require('./routes/dashboard');
 const { protect } = require('./middleware/authMiddleware'); // ✅ Correct import
 
 const app = express();
@@ -26,6 +27,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/inventory', protect, inventoryRoutes);
 app.use('/api/products', protect, productRoutes);
 app.use('/api/categories',  categoryRoutes);
+
+app.use('/api/admin', protect, dashboardRoutes);
+
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

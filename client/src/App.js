@@ -21,6 +21,7 @@ import AddProduct from './pages/AddProduct';
 import EditProduct from './pages/EditProduct';
 import ProductDetail from './pages/ProductDetail';
 import Settings from './pages/Settings';
+import AdminUsers from './pages/AdminUsers';
 
 
 function PrivateRoute({ children, role }) {
@@ -62,7 +63,8 @@ function AppContent() {
           <Route path="products/:id/edit" element={<EditProduct />} />
           <Route path="products/:id" element={<ProductDetail />} />
           <Route path="settings" element={<Settings />} />
-        <Route path="settings" element={<Settings />} />
+       
+        <Route path="users" element={<AdminUsers />} />
 
           <Route path="alerts" element={<Alerts />} />
           <Route path="logs" element={<Logs />} />

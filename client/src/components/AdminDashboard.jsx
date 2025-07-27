@@ -1,6 +1,8 @@
-// src/pages/AdminDashboard.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PackageCheck, Bell, Users, ClipboardList } from 'lucide-react';
+import axios from 'axios';
+import axiosClient from '../api/axiosClient';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -13,6 +15,22 @@ import {
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale);
 
 export default function AdminDashboard() {
+  const [userCount, setUserCount] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+       const res = await axiosClient.get('/users/all');
+
+        setUserCount(res.data.length);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
   const stats = [
     {
       icon: <PackageCheck size={24} />,
@@ -33,10 +51,11 @@ export default function AdminDashboard() {
     {
       icon: <Users size={24} />,
       label: 'Total Users',
-      value: 5,
+      value: userCount,
       change: '+2.8%',
       bg: 'bg-blue-600',
       chartColor: '#60a5fa',
+      onClick: () => navigate('/admin/users'),
     },
     {
       icon: <ClipboardList size={24} />,
@@ -65,16 +84,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Diagonal Background */}
       <div className="absolute inset-0 z-0">
         <div className="w-full h-full bg-white clip-diagonal-light absolute top-0 left-0" />
         <div className="w-full h-full bg-[#0f172a] clip-diagonal-dark absolute top-0 left-0" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {stats.map(({ icon, label, value, change, bg, chartColor }) => (
-          <div key={label} className={`rounded-xl p-4 text-white shadow-lg ${bg}`}>
+        {stats.map(({ icon, label, value, change, bg, chartColor, onClick }) => (
+          <div
+            key={label}
+            onClick={onClick}
+            className={`rounded-xl p-4 text-white shadow-lg ${bg} ${onClick ? 'cursor-pointer hover:scale-105 transition' : ''}`}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-sm font-semibold opacity-80">{label}</h3>
