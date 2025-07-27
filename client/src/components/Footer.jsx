@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from 'react';
 
 const Footer = () => {
@@ -64,3 +65,5 @@ const Footer = () => {
 };
 
 export default Footer;
+=======
+>>>>>>> e6952ca (added animation)

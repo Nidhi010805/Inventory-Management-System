@@ -36,7 +36,7 @@ export default function Alerts() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-semibold text-red-800 dark:text-red-300">
-                    {alert.type} – <span className="text-gray-800 dark:text-gray-200">{alert.product}</span>
+                    {alert.type} <span className="text-gray-800 dark:text-gray-200">{alert.product}</span>
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">{alert.message}</p>
                 </div>
