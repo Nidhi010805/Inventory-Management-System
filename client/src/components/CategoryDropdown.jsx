@@ -10,9 +10,9 @@ export default function CategoryDropdown({ value, onChange }) {
     const fetchCategories = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/categories', {
-          withCredentials: true, // send cookies for auth if backend requires
+          withCredentials: true, 
         });
-        console.log('API response:', res.data);
+       
         setCategories(res.data);
       } catch (err) {
         console.error('Error fetching categories:', err);

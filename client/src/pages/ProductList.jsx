@@ -12,7 +12,10 @@ const ProductList = () => {
   const fetchProducts = async () => {
   try {
     const res = await getAllProducts();
-    console.log("Fetched Products:", res.data); // 👈 Add this line
+
+   
+    
+
     setProducts(res.data);
   } catch (err) {
     toast.error("Failed to load products.");

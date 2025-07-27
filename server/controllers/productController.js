@@ -1,30 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Create a new product
+// Create a new product with SKU and barcode uniqueness check
 exports.createProduct = async (req, res) => {
   const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
 
   try {
-    let categoryData = null;
-
-    // ✅ If category comes with ID, use it directly
-    if (category?.id) {
-      categoryData = await prisma.category.findUnique({ where: { id: category.id } });
-    }
-
-    // ✅ If category comes with name (and not found by ID), use name
-    if (!categoryData && category?.name) {
-      categoryData = await prisma.category.findFirst({ where: { name: category.name } });
-
-      // ✅ If not found, create it
-      if (!categoryData) {
-        categoryData = await prisma.category.create({
-          data: { name: category.name },
-        });
-      }
-    }
-
     const product = await prisma.product.create({
       data: {
         sku,
@@ -33,8 +14,93 @@ exports.createProduct = async (req, res) => {
         stock,
         threshold,
         expiryDate: new Date(expiryDate),
+        category: {
+          connect: { id: category }, // assuming category is ID
+        },
+      },
+    });
 
-        // ✅ Connect category if found/created
+    res.status(201).json(product);
+  } catch (err) {
+  console.error("Product creation error:", err);
+  
+
+  if (err.code === 'P2002') {
+    const duplicateField = err.meta?.target?.includes('sku')
+      ? 'SKU'
+      : err.meta?.target?.includes('barcode')
+      ? 'Barcode'
+      : 'Field';
+
+    return res.status(400).json({
+      error: `${duplicateField} already exists. Please use a different one.`,
+    });
+  }
+
+  res.status(500).json({
+    error: 'Failed to create product. Please try again.',
+  });
+}
+
+};
+
+
+// Update product with SKU and barcode uniqueness check (excluding current product)
+exports.updateProduct = async (req, res) => {
+  const { id } = req.params;
+  const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
+
+  try {
+    const existing = await prisma.product.findUnique({ where: { id: parseInt(id) } });
+    if (!existing) return res.status(404).json({ error: 'Product not found' });
+
+    // Check SKU uniqueness excluding current product
+    const skuExists = await prisma.product.findFirst({
+      where: {
+        sku,
+        NOT: { id: parseInt(id) },
+      },
+    });
+    if (skuExists) {
+      return res.status(400).json({ error: `SKU "${sku}" already exists.` });
+    }
+
+    // Check barcode uniqueness excluding current product
+    const barcodeExists = await prisma.product.findFirst({
+      where: {
+        barcode,
+        NOT: { id: parseInt(id) },
+      },
+    });
+    if (barcodeExists) {
+      return res.status(400).json({ error: `Barcode "${barcode}" already exists.` });
+    }
+
+    let categoryData = null;
+
+    if (category?.id) {
+      categoryData = await prisma.category.findUnique({ where: { id: category.id } });
+    }
+
+    if (!categoryData && category?.name) {
+      categoryData = await prisma.category.findFirst({ where: { name: category.name } });
+
+      if (!categoryData) {
+        categoryData = await prisma.category.create({
+          data: { name: category.name },
+        });
+      }
+    }
+
+    const product = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: {
+        sku,
+        name,
+        barcode,
+        stock,
+        threshold,
+        expiryDate: new Date(expiryDate),
         ...(categoryData && {
           category: {
             connect: { id: categoryData.id },
@@ -42,17 +108,24 @@ exports.createProduct = async (req, res) => {
         }),
       },
       include: {
-        category: true, // ✅ So frontend gets populated category
+        category: true,
       },
     });
 
-    res.status(201).json(product);
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'UPDATE_PRODUCT',
+        target: `Product SKU: ${sku}`,
+      },
+    });
+
+    res.json(product);
   } catch (err) {
-    console.error("Product creation error:", err);
-    res.status(500).json({ error: "Failed to create product" });
+    console.error("Update error:", err);
+    res.status(400).json({ error: 'Failed to update product', details: err.message });
   }
 };
-
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
@@ -91,68 +164,6 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-exports.updateProduct = async (req, res) => {
-  const { id } = req.params;
-  const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
-
-  try {
-    const existing = await prisma.product.findUnique({ where: { id: parseInt(id) } });
-    if (!existing) return res.status(404).json({ error: 'Product not found' });
-
-    let categoryData = null;
-
-    // ✅ If category comes with ID, use it directly
-    if (category?.id) {
-      categoryData = await prisma.category.findUnique({ where: { id: category.id } });
-    }
-
-    // ✅ If not found by ID, fallback to name
-    if (!categoryData && category?.name) {
-      categoryData = await prisma.category.findFirst({ where: { name: category.name } });
-
-      // ✅ If not found by name either, create new
-      if (!categoryData) {
-        categoryData = await prisma.category.create({
-          data: { name: category.name },
-        });
-      }
-    }
-
-    const product = await prisma.product.update({
-      where: { id: parseInt(id) },
-      data: {
-        sku,
-        name,
-        barcode,
-        stock,
-        threshold,
-        expiryDate: new Date(expiryDate),
-
-        ...(categoryData && {
-          category: {
-            connect: { id: categoryData.id },
-          },
-        }),
-      },
-      include: {
-        category: true, // ✅ return populated category
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        userId: req.user.id,
-        action: 'UPDATE_PRODUCT',
-        target: `Product SKU: ${sku}`,
-      },
-    });
-
-    res.json(product);
-  } catch (err) {
-    console.error("Update error:", err);
-    res.status(400).json({ error: 'Failed to update product', details: err.message });
-  }
-};
 // Delete a product by ID
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
@@ -170,7 +181,6 @@ exports.deleteProduct = async (req, res) => {
       where: { id: parseInt(id) },
     });
 
-    // Optional: log who deleted it
     await prisma.auditLog.create({
       data: {
         userId: req.user.id,
@@ -183,5 +193,37 @@ exports.deleteProduct = async (req, res) => {
   } catch (err) {
     console.error('Delete error:', err);
     res.status(500).json({ error: 'Failed to delete product' });
+  }
+};
+// Check SKU or Barcode uniqueness (for live frontend validation)
+exports.checkUnique = async (req, res) => {
+  const { sku, barcode, excludeId } = req.query;
+
+  if (!sku && !barcode) {
+    return res.status(400).json({ error: 'sku or barcode query param required' });
+  }
+
+  try {
+    const conditions = [];
+
+    if (sku) conditions.push({ sku });
+    if (barcode) conditions.push({ barcode });
+
+    const where = {
+      OR: conditions,
+      ...(excludeId ? { NOT: { id: Number(excludeId) } } : {}),
+    };
+
+    const found = await prisma.product.findFirst({ where });
+
+    if (found) {
+      if (sku && found.sku === sku) return res.json({ exists: true, field: 'sku' });
+      if (barcode && found.barcode === barcode) return res.json({ exists: true, field: 'barcode' });
+    }
+
+    res.json({ exists: false });
+  } catch (err) {
+    console.error('Check unique error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 };
