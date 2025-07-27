@@ -12,37 +12,106 @@ enum Role {
   STAFF
 }
 
-model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  role      Role      @default(STAFF)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+enum ActionType {
+  SALE
+  RETURN
+  RESTOCK
+  ADJUSTMENT
+  WASTE
+}
 
-  products  Product[]      // Products created by this user
-  logs      AuditLog[]     // Inventory actions by this user
+enum NotificationType {
+  LOW_STOCK
+  OUT_OF_STOCK
+  EXPIRY_WARNING
+  SYSTEM_ALERT
+}
+
+model User {
+  id                     Int       @id @default(autoincrement())
+  name                   String
+  username               String    @unique
+  email                  String    @unique
+  password               String
+  role                   Role      @default(STAFF)
+  notificationPreferences Json?    // Store email, sms, push preferences as JSON
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  products               Product[]       // Products created by this user
+  inventoryLogs          InventoryLog[]  // Inventory actions by this user
+  notifications          Notification[]  // Notifications for this user
+
+  @@index([email])
+  @@index([username])
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
-  sku         String    @unique
-  name        String
-  barcode     String    @unique
-  stock       Int
-  threshold   Int
-  expiryDate  DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           Int       @id @default(autoincrement())
+  sku          String    @unique
+  name         String
+  description  String?
+  barcode      String    @unique
+  price        Decimal   @db.Decimal(10, 2)
+  currentStock Int       @map("current_stock")
+  minThreshold Int       @map("min_threshold")
+  stock        Int       // Keep for backward compatibility
+  threshold    Int       // Keep for backward compatibility  
+  expiryDate   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  createdById Int?
-  createdBy   User?     @relation(fields: [createdById], references: [id])
+  createdById   Int?
+  createdBy     User?           @relation(fields: [createdById], references: [id])
 
-  categoryId  Int?
-  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId    Int?
+  category      Category?       @relation(fields: [categoryId], references: [id])
+
+  inventoryLogs InventoryLog[]
+  notifications Notification[]
+
+  @@index([sku])
+  @@index([currentStock])
+  @@index([minThreshold])
 }
 
+model InventoryLog {
+  id             Int        @id @default(autoincrement())
+  productId      Int        @map("product_id")
+  product        Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  actionType     ActionType @map("action_type")
+  quantityChange Int        @map("quantity_change")
+  previousStock  Int        @map("previous_stock")
+  newStock       Int        @map("new_stock")
+  userId         Int        @map("user_id")
+  user           User       @relation(fields: [userId], references: [id])
+  timestamp      DateTime   @default(now())
+  notes          String?
+
+  @@index([productId])
+  @@index([actionType])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int?             @map("product_id")
+  product   Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// Keep AuditLog for backward compatibility
 model AuditLog {
   id         Int      @id @default(autoincrement())
   userId     Int
@@ -50,6 +119,9 @@ model AuditLog {
   action     String   // e.g. 'ADD_STOCK', 'REMOVE_STOCK'
   target     String   // e.g. 'Product SKU: ABC123'
   timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@index([timestamp])
 }
 
 model Category {
