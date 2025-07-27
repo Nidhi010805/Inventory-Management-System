@@ -1,39 +1,53 @@
-// server/app.js
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
+const fs = require('fs');
+const path = require('path');
 
-import userRoutes from './routes/userRoutes.js';
-import wasteRoutes from './routes/wasteRoutes.js';
-
-dotenv.config();
-
-const app = express();
 const prisma = new PrismaClient();
 
-// Middlewares
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+async function main() {
+  const filePath = path.join(__dirname, '..', 'data', 'dummyProducts.json'); // ✅ fixed path
+  const products = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/waste', wasteRoutes);
+  for (const product of products) {
+    // Ensure category exists or create it
+    const category = await prisma.category.upsert({
+      where: { id: product.categoryId },
+      update: {},
+      create: {
+        id: product.categoryId,
+        name: product.category.name,
+      },
+    });
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('🌍 Plastic Waste Management API is live...');
-});
+    // Insert product
+    await prisma.product.create({
+      data: {
+        sku: product.sku,
+        name: product.name,
+        barcode: product.barcode,
+        stock: product.stock,
+        threshold: product.threshold,
+        expiryDate: new Date(product.expiryDate),
+        createdAt: new Date(product.createdAt),
+        updatedAt: new Date(product.updatedAt),
+        category: {
+          connect: { id: category.id },
+        },
+        createdBy: {
+          connect: { id: 1 }, // 👈 Make sure user with id=1 exists
+        },
+      },
+    });
 
-// Global error handler (optional)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something broke!', error: err.message });
-});
+    console.log(`✅ Seeded: ${product.name}`);
+  }
 
-// Server start
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
+  console.log('\n🎉 All products seeded.');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

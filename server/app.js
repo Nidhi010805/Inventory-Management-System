@@ -22,7 +22,7 @@ app.use(cors({
 app.use('/api/auth', authRoutes);
 
 // Protected routes
-app.use('/api/users', protect, userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/inventory', protect, inventoryRoutes);
 app.use('/api/products', protect, productRoutes);
 app.use('/api/categories', protect, categoryRoutes);

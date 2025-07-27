@@ -43,7 +43,7 @@ const ProductList = () => {
       </div>
 
       <div className="overflow-x-auto bg-white rounded shadow-md">
-        <table className="min-w-full text-sm text-left border border-gray-200">
+        <table className="min-w-full text-sm text-left border border-gray-200 text-gray-800">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
               <th className="px-4 py-3 border-b">SKU</th>
@@ -65,9 +65,11 @@ const ProductList = () => {
             ) : (
               products.map((p) => (
                 <tr
-                  key={p._id}
+                  key={p.id}
                   className={`hover:bg-gray-50 ${
-                    p.stock < p.threshold ? "bg-red-50 text-red-700" : "bg-white"
+                    p.stock < p.threshold
+                      ? "bg-red-100 text-red-900 font-semibold"
+                      : "bg-white"
                   }`}
                 >
                   <td className="px-4 py-2 border-b">{p.sku}</td>
@@ -80,13 +82,13 @@ const ProductList = () => {
                   <td className="px-4 py-2 border-b">{p.category?.name || "—"}</td>
                   <td className="px-4 py-2 border-b text-center space-x-2">
                     <Link
-                      to={`/edit-product/${p._id}`}
+                      to={`/edit-product/${p.id}`}
                       className="text-blue-600 hover:underline"
                     >
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDelete(p._id)}
+                      onClick={() => handleDelete(p.id)}
                       className="text-red-600 hover:underline"
                     >
                       Delete

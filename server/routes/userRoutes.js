@@ -3,18 +3,21 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { protect } = require('../middleware/authMiddleware'); // ✅ Correct import
+const { protect } = require('../middleware/authMiddleware');
 
-// Protected route: Get current user profile
+// Get current user profile
 router.get('/me', protect, userController.getMyProfile);
 
-// (Optional) Get all users — admin only
+// ✅ Update current user's profile
+router.put('/me', protect, userController.updateUserProfile);
+
+// Admin: Get all users
 router.get('/all', protect, userController.getAllUsers);
 
-// (Optional) Update user role
+// Admin: Update user role
 router.put('/:id/role', protect, userController.updateUserRole);
 
-// (Optional) Delete user
+// Admin: Delete user
 router.delete('/:id', protect, userController.deleteUser);
 
 module.exports = router;

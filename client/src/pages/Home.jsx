@@ -1,74 +1,73 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
 
-const Home = () => {
+// Feature Card Component
+const FeatureCard = ({ icon, title, desc }) => (
+  <div className="bg-white shadow hover:shadow-xl transition rounded-xl p-6 text-center border border-gray-200">
+    <div className="text-5xl mb-4">{icon}</div>
+    <h3 className="text-xl font-semibold mb-2 text-gray-800">{title}</h3>
+    <p className="text-gray-600">{desc}</p>
+  </div>
+);
+
+const HomePage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-100 via-white to-white text-gray-800">
-      {/* Navbar */}
-      <nav className="flex justify-between items-center px-6 py-4 shadow-md bg-white sticky top-0 z-50">
-        <div className="text-2xl font-bold text-green-600">ReLoop</div>
-        <div className="space-x-6">
-          <Link to="/" className="hover:text-green-500">Home</Link>
-          <Link to="/about" className="hover:text-green-500">About</Link>
-          <Link to="/contact" className="hover:text-green-500">Contact</Link>
-          <Link to="/login">
-            <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-              Login
-            </button>
-          </Link>
-        </div>
-      </nav>
+    <div className="bg-white text-gray-800">
 
       {/* Hero Section */}
-      <section className="flex flex-col md:flex-row items-center justify-between px-8 md:px-20 py-20">
-        <div className="max-w-xl">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-green-700 leading-tight">
-            Join the Circular Revolution ♻️
-          </h1>
-          <p className="mt-6 text-lg text-gray-600">
-            Return packaging, earn rewards, and reduce waste. ReLoop connects users with stores for seamless packaging return and a greener tomorrow.
-          </p>
-          <Link to="/signup">
-            <button className="mt-8 bg-green-600 text-white px-6 py-3 rounded-lg text-lg hover:bg-green-700 transition">
-              Get Started
-            </button>
-          </Link>
-        </div>
+      <section className="py-24 bg-white px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-16">
 
-        {/* Image */}
-        <div className="mt-10 md:mt-0">
-          <img
-            src="/images/hero-reloop.png"
-            alt="ReLoop Packaging"
-            className="w-full max-w-md mx-auto drop-shadow-xl"
-          />
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="bg-white py-16 px-8 md:px-20">
-        <h2 className="text-3xl font-bold text-center mb-12 text-green-700">How ReLoop Works</h2>
-        <div className="grid md:grid-cols-4 gap-10">
-          {[
-            { title: 'Purchase Product', emoji: '🛍️' },
-            { title: 'Scan QR Code', emoji: '📱' },
-            { title: 'Return Packaging', emoji: '🔄' },
-            { title: 'Earn Rewards', emoji: '🎁' },
-          ].map((step, i) => (
-            <div key={i} className="bg-green-50 rounded-xl shadow p-6 text-center hover:shadow-md transition">
-              <div className="text-4xl mb-4">{step.emoji}</div>
-              <h3 className="text-xl font-semibold text-green-800">{step.title}</h3>
+          {/* Left Content */}
+          <div className="md:w-1/2 text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+              Smarter Inventory <br className="hidden md:block" /> Management Starts Here
+            </h1>
+            <p className="text-gray-600 text-lg mb-8 max-w-md">
+              Track stock in real-time, avoid shortages, and get actionable insights with our powerful and easy-to-use inventory platform.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-base font-medium shadow-md transition">
+                Try for Free
+              </button>
+              <button className="border border-gray-300 hover:border-blue-600 text-gray-700 hover:text-blue-600 px-6 py-3 rounded-md text-base font-medium transition">
+                Watch Demo
+              </button>
             </div>
-          ))}
+          </div>
+
+          {/* Right Illustration */}
+          <div className="md:w-1/2">
+            <img
+              src="/assets/dashboard-preview.png" // Replace with real path
+              alt="Inventory Dashboard Preview"
+              className="w-full max-w-md mx-auto rounded-lg shadow-lg"
+            />
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-green-100 text-center py-6 text-gray-600 mt-12">
-        © 2025 ReLoop. Made with ❤️ for sustainability.
-      </footer>
+      {/* What You'll Build */}
+      <section className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">What You'll Build</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            A real-time platform with smart dashboards, alerting systems, analytics and secure role-based access.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
+          <FeatureCard icon="📊" title="Product Dashboard" desc="Categorize items and monitor live stock levels with clean UI." />
+          <FeatureCard icon="🔔" title="Instant Alerts" desc="Get notified when items hit reorder levels via browser, email or Slack." />
+          <FeatureCard icon="🔐" title="Role-Based Login" desc="Admins and Staff get separate secure access and permissions." />
+          <FeatureCard icon="📈" title="Data Visualizations" desc="Interactive charts for better stock and sales analysis." />
+          <FeatureCard icon="📦" title="Inventory Logs" desc="Keep record of product moves: additions, deletions, transfers." />
+          <FeatureCard icon="💻" title="Built with Modern Stack" desc="React.js, Node/Django, PostgreSQL, Chart.js — SaaS ready." />
+        </div>
+      </section>
+
+      
     </div>
   );
 };
 
-export default Home;
+export default HomePage;

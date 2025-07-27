@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
 import {
   LayoutDashboard,
   PackageCheck,
@@ -14,6 +16,8 @@ import {
 
 export default function DashboardBase({ role }) {
   const location = useLocation();
+  const { user } = useAuth();
+  
 
   const sidebarSections = [
     {
@@ -25,12 +29,10 @@ export default function DashboardBase({ role }) {
     {
       title: 'Inventory',
       links: [
-        { icon: <PackageCheck size={18} />, label: 'Products', href: `/${role}/products` },
-        ...(role === 'admin'
-          ? [{ icon: <Bell size={18} />, label: 'Alerts', href: `/${role}/alerts` }]
-          : []),
-        { icon: <ClipboardList size={18} />, label: 'Logs', href: `/${role}/logs` },
-      ],
+  { icon: <PackageCheck size={18} />, label: 'Products', href: `/${role}/products` },
+  { icon: <ClipboardList size={18} />, label: 'Logs', href: `/${role}/logs` },
+],
+
     },
   ];
 
@@ -40,7 +42,13 @@ export default function DashboardBase({ role }) {
       <aside className="w-64 bg-[#1e293b] flex flex-col justify-between p-4 shadow-md">
         <div>
           <h2 className="text-2xl font-bold text-white mb-6 px-2">InventorySys</h2>
-
+         <Link
+    to="/"
+    className="flex items-center gap-3 px-4 py-2 rounded-lg mb-4 text-gray-400 hover:text-white hover:bg-gray-700 transition"
+  >
+    <LayoutDashboard size={18} />
+    <span className="text-sm">Home</span>
+  </Link>
           {/* Sidebar Sections */}
           <nav className="flex flex-col gap-6">
             {sidebarSections.map((section) => (
@@ -92,18 +100,36 @@ export default function DashboardBase({ role }) {
           </h1>
 
           <div className="flex items-center gap-4">
-            <button className="text-gray-400 hover:text-white">
-              <BellRing size={18} />
-            </button>
+            <Link to={`/${role}/alerts`} className="text-gray-400 hover:text-white relative">
+  <BellRing size={18} />
+  {/* Optional red dot */}
+  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+</Link>
+
             <button className="text-gray-400 hover:text-white">
               <Moon size={18} />
             </button>
-            <button className="text-gray-400 hover:text-white">
-              <Settings size={18} />
-            </button>
-            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-              <UserCircle size={20} />
-            </div>
+           <Link
+  to={`/${role}/settings`}
+  className={`text-gray-400 hover:text-white ${
+    location.pathname === `/${role}/settings` ? 'text-white' : ''
+  }`}
+>
+  <Settings size={18} />
+</Link>
+
+           <div className="flex items-center gap-2">
+  <div className="w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center text-sm font-semibold">
+    {user?.name?.charAt(0)?.toUpperCase()}
+  </div>
+  <div className="flex flex-col items-end text-xs text-gray-300">
+    <span>{user?.name}</span>
+    <span className="text-[10px] text-gray-500">ID: {user?.id}</span>
+  </div>
+</div>
+
+
+
           </div>
         </header>
 
