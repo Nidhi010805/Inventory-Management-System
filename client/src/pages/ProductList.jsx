@@ -2,18 +2,23 @@ import React, { useEffect, useState } from "react";
 import { getAllProducts, deleteProduct } from "../api/productApi";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase(); // ✅ Normalize role to lowercase
 
   const fetchProducts = async () => {
-    try {
-      const res = await getAllProducts();
-      setProducts(res.data);
-    } catch (err) {
-      toast.error("Failed to load products.");
-    }
-  };
+  try {
+    const res = await getAllProducts();
+    console.log("Fetched Products:", res.data); // 👈 Add this line
+    setProducts(res.data);
+  } catch (err) {
+    toast.error("Failed to load products.");
+  }
+};
+
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete this product?")) return;
@@ -34,12 +39,14 @@ const ProductList = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">📦 Products</h2>
-        <Link
-          to="/admin/products/add"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          + Add Product
-        </Link>
+        {role === "admin" && (
+          <Link
+            to="/admin/products/add"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            + Add Product
+          </Link>
+        )}
       </div>
 
       <div className="overflow-x-auto bg-white rounded shadow-md">
@@ -64,6 +71,7 @@ const ProductList = () => {
               </tr>
             ) : (
               products.map((p) => (
+                
                 <tr
                   key={p.id}
                   className={`hover:bg-gray-50 ${
@@ -79,20 +87,28 @@ const ProductList = () => {
                   <td className="px-4 py-2 border-b">
                     {new Date(p.expiryDate).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-2 border-b">{p.category?.name || "—"}</td>
+                  <td className="px-4 py-2 border-b">
+                    {p.category?.name || "—"}
+                  </td>
                   <td className="px-4 py-2 border-b text-center space-x-2">
-                    <Link
-                      to={`/edit-product/${p.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(p.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
+                    {role === "admin" ? (
+                      <>
+                        <Link
+                          to={`/edit-product/${p.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))

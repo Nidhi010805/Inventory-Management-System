@@ -1,33 +1,48 @@
-import React from 'react';
-
-const defaultCategories = [
-  { id: 1, name: 'Electronics' },
-  { id: 2, name: 'Grocery' },
-  { id: 3, name: 'Clothing' },
-  { id: 4, name: 'Stationery' },
-  { id: 5, name: 'Furniture' },
-  { id: 6, name: 'Hardware' },
-  { id: 7, name: 'Cleaning Supplies' },
-  { id: 8, name: 'Healthcare' },
-  { id: 9, name: 'Toys' },
-  { id: 10, name: 'Books' },
-  { id: 11, name: 'Beauty & Personal Care' },
-  { id: 12, name: 'Kitchen Essentials' },
-  { id: 13, name: 'Tools & Equipment' },
-  { id: 14, name: 'Sports & Outdoors' },
-  { id: 15, name: 'Automotive' }
-];
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function CategoryDropdown({ value, onChange }) {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/categories', {
+          withCredentials: true, // send cookies for auth if backend requires
+        });
+        console.log('API response:', res.data);
+        setCategories(res.data);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setError('Failed to load categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   return (
     <select
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))} // Ensures the categoryId is sent as a number
+      value={value || ''}
+      onChange={(e) => onChange(Number(e.target.value))}
       required
       className="bg-[#1a253c] text-white border border-gray-600 rounded px-4 py-2 w-full"
     >
       <option value="">Select Category</option>
-      {defaultCategories.map((cat) => (
+
+      {loading && <option disabled>Loading...</option>}
+
+      {error && <option disabled>{error}</option>}
+
+      {!loading && !error && categories.length === 0 && (
+        <option disabled>No categories found</option>
+      )}
+
+      {!loading && !error && categories.map((cat) => (
         <option key={cat.id} value={cat.id}>
           {cat.name}
         </option>

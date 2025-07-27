@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 import {
   LayoutDashboard,
@@ -27,13 +28,16 @@ export default function DashboardBase({ role }) {
       ],
     },
     {
-      title: 'Inventory',
-      links: [
-  { icon: <PackageCheck size={18} />, label: 'Products', href: `/${role}/products` },
-  { icon: <ClipboardList size={18} />, label: 'Logs', href: `/${role}/logs` },
-],
+  title: 'Inventory',
+  links: [
+    { icon: <PackageCheck size={18} />, label: 'Products', href: `/${role}/products` },
+    ...(role === 'admin'
+      ? [{ icon: <ClipboardList size={18} />, label: 'Logs', href: `/${role}/logs` }]
+      : []),
+  ],
+},
 
-    },
+    
   ];
 
   return (
@@ -80,10 +84,15 @@ export default function DashboardBase({ role }) {
 
         {/* Logout */}
         <button
-          onClick={() => {
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-          }}
+          onClick={async () => {
+  try {
+    await axios.post('/api/auth/logout'); // backend endpoint to clear cookie
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  } catch (err) {
+    console.error('Logout failed:', err);
+  }
+}}
           className="flex items-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900 px-4 py-2 rounded-md transition"
         >
           <LogOut size={18} />
@@ -100,23 +109,28 @@ export default function DashboardBase({ role }) {
           </h1>
 
           <div className="flex items-center gap-4">
-            <Link to={`/${role}/alerts`} className="text-gray-400 hover:text-white relative">
-  <BellRing size={18} />
-  {/* Optional red dot */}
-  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-</Link>
+           {role === 'admin' && (
+  <Link to={`/${role}/alerts`} className="text-gray-400 hover:text-white relative">
+    <BellRing size={18} />
+    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+  </Link>
+)}
 
-            <button className="text-gray-400 hover:text-white">
-              <Moon size={18} />
-            </button>
-           <Link
-  to={`/${role}/settings`}
-  className={`text-gray-400 hover:text-white ${
-    location.pathname === `/${role}/settings` ? 'text-white' : ''
-  }`}
->
-  <Settings size={18} />
-</Link>
+<button className="text-gray-400 hover:text-white">
+  <Moon size={18} />
+</button>
+
+{role === 'admin' && (
+  <Link
+    to={`/${role}/settings`}
+    className={`text-gray-400 hover:text-white ${
+      location.pathname === `/${role}/settings` ? 'text-white' : ''
+    }`}
+  >
+    <Settings size={18} />
+  </Link>
+)}
+
 
            <div className="flex items-center gap-2">
   <div className="w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center text-sm font-semibold">

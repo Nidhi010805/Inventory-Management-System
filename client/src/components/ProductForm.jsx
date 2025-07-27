@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CategoryDropdown from './CategoryDropdown';
+import CategoryDropdown from './CategoryDropdown'; // 👈 make sure path is correct
 
 const ProductForm = ({ onSubmit, initialData = {} }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +9,7 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
     stock: '',
     threshold: '',
     expiryDate: '',
-    categoryId: ''
+    categoryId: '', // ✅ keep only ID
   });
 
   useEffect(() => {
@@ -18,7 +18,7 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
         ...prev,
         ...initialData,
         expiryDate: initialData.expiryDate?.split('T')[0] || '',
-        categoryId: initialData.categoryId || '',
+        categoryId: initialData.category?.id || '',
       }));
     }
   }, [initialData]);
@@ -31,13 +31,12 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Convert fields to correct types
     const cleanedData = {
       ...formData,
       stock: Number(formData.stock),
       threshold: Number(formData.threshold),
-      categoryId: formData.categoryId ? Number(formData.categoryId) : null,
-      expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : null
+      expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : null,
+      categoryId: Number(formData.categoryId),
     };
 
     console.log("Submitting form data:", cleanedData);
@@ -61,7 +60,6 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
           required
           className="bg-[#1a253c] text-white border border-gray-600 rounded px-4 py-2"
         />
-
         <input
           type="text"
           name="name"
@@ -71,7 +69,6 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
           required
           className="bg-[#1a253c] text-white border border-gray-600 rounded px-4 py-2"
         />
-
         <input
           type="text"
           name="barcode"
@@ -94,7 +91,6 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
           required
           className="bg-[#1a253c] text-white border border-gray-600 rounded px-4 py-2"
         />
-
         <input
           type="number"
           name="threshold"
@@ -105,7 +101,6 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
           required
           className="bg-[#1a253c] text-white border border-gray-600 rounded px-4 py-2"
         />
-
         <input
           type="date"
           name="expiryDate"
@@ -116,16 +111,13 @@ const ProductForm = ({ onSubmit, initialData = {} }) => {
         />
       </div>
 
-      <CategoryDropdown
-        value={formData.categoryId}
-        onChange={(id) =>
-          setFormData(prev => ({
-            ...prev,
-            categoryId: id ? Number(id) : ''
-          }))
-        }
-        className="bg-[#1a253c] text-white border border-gray-600 rounded px-4 py-2"
-      />
+      {/* ✅ Category Dropdown */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <CategoryDropdown
+          value={formData.categoryId}
+          onChange={(val) => setFormData(prev => ({ ...prev, categoryId: val }))}
+        />
+      </div>
 
       <button
         type="submit"

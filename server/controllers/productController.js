@@ -3,14 +3,28 @@ const prisma = new PrismaClient();
 
 // Create a new product
 exports.createProduct = async (req, res) => {
-  const { sku, name, barcode, categoryId, stock, threshold, expiryDate } = req.body;
-  const userId = req.user?.id;
-
-  if (!sku || !name || !barcode || !expiryDate) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+  const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
 
   try {
+    let categoryData = null;
+
+    // ✅ If category comes with ID, use it directly
+    if (category?.id) {
+      categoryData = await prisma.category.findUnique({ where: { id: category.id } });
+    }
+
+    // ✅ If category comes with name (and not found by ID), use name
+    if (!categoryData && category?.name) {
+      categoryData = await prisma.category.findFirst({ where: { name: category.name } });
+
+      // ✅ If not found, create it
+      if (!categoryData) {
+        categoryData = await prisma.category.create({
+          data: { name: category.name },
+        });
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
         sku,
@@ -19,24 +33,26 @@ exports.createProduct = async (req, res) => {
         stock,
         threshold,
         expiryDate: new Date(expiryDate),
-        categoryId: parseInt(categoryId),
-        createdById: userId,
-      },
-    });
 
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'CREATE_PRODUCT',
-        target: `Product SKU: ${sku}`,
+        // ✅ Connect category if found/created
+        ...(categoryData && {
+          category: {
+            connect: { id: categoryData.id },
+          },
+        }),
+      },
+      include: {
+        category: true, // ✅ So frontend gets populated category
       },
     });
 
     res.status(201).json(product);
   } catch (err) {
-    res.status(400).json({ error: 'Failed to create product', details: err.message });
+    console.error("Product creation error:", err);
+    res.status(500).json({ error: "Failed to create product" });
   }
 };
+
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
@@ -75,14 +91,32 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Update product
 exports.updateProduct = async (req, res) => {
   const { id } = req.params;
-  const { sku, name, barcode, categoryId, stock, threshold, expiryDate } = req.body;
+  const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
 
   try {
     const existing = await prisma.product.findUnique({ where: { id: parseInt(id) } });
     if (!existing) return res.status(404).json({ error: 'Product not found' });
+
+    let categoryData = null;
+
+    // ✅ If category comes with ID, use it directly
+    if (category?.id) {
+      categoryData = await prisma.category.findUnique({ where: { id: category.id } });
+    }
+
+    // ✅ If not found by ID, fallback to name
+    if (!categoryData && category?.name) {
+      categoryData = await prisma.category.findFirst({ where: { name: category.name } });
+
+      // ✅ If not found by name either, create new
+      if (!categoryData) {
+        categoryData = await prisma.category.create({
+          data: { name: category.name },
+        });
+      }
+    }
 
     const product = await prisma.product.update({
       where: { id: parseInt(id) },
@@ -93,7 +127,15 @@ exports.updateProduct = async (req, res) => {
         stock,
         threshold,
         expiryDate: new Date(expiryDate),
-        categoryId: parseInt(categoryId),
+
+        ...(categoryData && {
+          category: {
+            connect: { id: categoryData.id },
+          },
+        }),
+      },
+      include: {
+        category: true, // ✅ return populated category
       },
     });
 
@@ -107,26 +149,39 @@ exports.updateProduct = async (req, res) => {
 
     res.json(product);
   } catch (err) {
+    console.error("Update error:", err);
     res.status(400).json({ error: 'Failed to update product', details: err.message });
   }
 };
-
-// Delete product
+// Delete a product by ID
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
-  try {
-    const deletedProduct = await prisma.product.delete({ where: { id: parseInt(id) } });
 
+  try {
+    const existing = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    await prisma.product.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Optional: log who deleted it
     await prisma.auditLog.create({
       data: {
         userId: req.user.id,
         action: 'DELETE_PRODUCT',
-        target: `Product SKU: ${deletedProduct.sku}`,
+        target: `Product SKU: ${existing.sku}`,
       },
     });
 
-    res.json({ message: 'Product deleted' });
+    res.json({ message: 'Product deleted successfully' });
   } catch (err) {
-    res.status(400).json({ error: 'Failed to delete product' });
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Failed to delete product' });
   }
 };

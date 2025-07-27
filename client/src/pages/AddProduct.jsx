@@ -12,7 +12,9 @@ const AddProduct = () => {
 
   useEffect(() => {
     axios.get('/categories').then(res => setCategories(res.data));
+    
   }, []);
+  
 
   const handleSubmit = async (data) => {
   try {

@@ -4,10 +4,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node prisma/seed.js",
+    "seed:categories": "node prisma/seed-categories.js"
   },
   "keywords": [],
   "author": "",
