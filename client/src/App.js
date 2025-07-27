@@ -1,5 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Home from './pages/Home';
 import Login from './components/Login';
@@ -10,8 +12,11 @@ import { useAuth, AuthProvider } from './context/AuthContext';
 import DashboardBase from './pages/DashboardBase'; // shared layout
 import AdminDashboard from './components/AdminDashboard';
 import StaffDashboard from './components/StaffDashboard';
+import Dashboard from './components/Dashboard';
 import Alerts from './components/Alerts';
 import Logs from './components/Logs';
+import InventoryLog from './components/InventoryLog';
+import NotificationSettings from './components/NotificationSettings';
 
 // ✅ Import product pages
 import ProductList from './pages/ProductList';
@@ -33,50 +38,98 @@ function PrivateRoute({ children, role }) {
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin/*"
-          element={
-            <PrivateRoute role="admin">
-              <DashboardBase role="admin" />
-            </PrivateRoute>
-          }
-        >
-          <Route path="dashboard" element={<AdminDashboard />} />
-          
-          {/* ✅ Product Routes */}
-          <Route path="products" element={<ProductList />} />
-          <Route path="products/add" element={<AddProduct />} />
-          <Route path="products/:id/edit" element={<EditProduct />} />
-          <Route path="products/:id" element={<ProductDetail />} />
+          {/* Unified Dashboard Route */}
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
 
-          <Route path="alerts" element={<Alerts />} />
-          <Route path="logs" element={<Logs />} />
-        </Route>
+          {/* Inventory Management Routes */}
+          <Route
+            path="/inventory/logs"
+            element={
+              <PrivateRoute>
+                <InventoryLog />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Staff Routes */}
-        <Route
-          path="/staff/*"
-          element={
-            <PrivateRoute role="staff">
-              <DashboardBase role="staff" />
-            </PrivateRoute>
-          }
-        >
-          <Route path="dashboard" element={<StaffDashboard />} />
-          
-          {/* ✅ Product Routes for Staff */}
-          <Route path="products" element={<ProductList />} />
-          <Route path="products/:id" element={<ProductDetail />} />
+          <Route
+            path="/notifications/settings"
+            element={
+              <PrivateRoute>
+                <NotificationSettings />
+              </PrivateRoute>
+            }
+          />
 
-          <Route path="logs" element={<Logs />} />
-        </Route>
-      </Routes>
+          {/* Admin Routes */}
+          <Route
+            path="/admin/*"
+            element={
+              <PrivateRoute role="admin">
+                <DashboardBase role="admin" />
+              </PrivateRoute>
+            }
+          >
+            <Route path="dashboard" element={<AdminDashboard />} />
+            
+            {/* ✅ Product Routes */}
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/add" element={<AddProduct />} />
+            <Route path="products/:id/edit" element={<EditProduct />} />
+            <Route path="products/:id" element={<ProductDetail />} />
+
+            <Route path="alerts" element={<Alerts />} />
+            <Route path="logs" element={<Logs />} />
+          </Route>
+
+          {/* Staff Routes */}
+          <Route
+            path="/staff/*"
+            element={
+              <PrivateRoute role="staff">
+                <DashboardBase role="staff" />
+              </PrivateRoute>
+            }
+          >
+            <Route path="dashboard" element={<StaffDashboard />} />
+            
+            {/* ✅ Product Routes for Staff */}
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/:id" element={<ProductDetail />} />
+
+            <Route path="logs" element={<Logs />} />
+          </Route>
+        </Routes>
+
+        {/* Toast Notifications Container */}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+          style={{
+            fontSize: '14px'
+          }}
+        />
+      </div>
     </AuthProvider>
   );
 }
