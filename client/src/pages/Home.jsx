@@ -1,89 +1,150 @@
-import React from "react";
+"use client";
+import React, { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { fadeIn, staggerContainer } from "../components/utils/motionVariants";
-
-const steps = [
-  { title: "Purchase Product", emoji: "🛍️" },
-  { title: "Scan QR Code", emoji: "📱" },
-  { title: "Return Packaging", emoji: "🔄" },
-  { title: "Earn Rewards", emoji: "🎁" },
-];
+import {
+  FaBoxOpen,
+  FaBell,
+  FaUserShield,
+  FaChartBar,
+  FaCubes,
+  FaCode,
+} from "react-icons/fa";
+import Particles from "react-particles";
+import { loadSlim } from "tsparticles-slim";
 
 const FeatureCard = ({ icon, title, desc }) => (
-  <div className="bg-white shadow hover:shadow-xl transition rounded-xl p-6 text-center border border-gray-200">
-    <div className="text-5xl mb-4">{icon}</div>
-    <h3 className="text-xl font-semibold mb-2 text-gray-800">{title}</h3>
-    <p className="text-gray-600">{desc}</p>
-  </div>
+  <motion.div
+    whileHover={{ scale: 1.05 }}
+    className="bg-black/40 shadow-lg hover:shadow-xl transition rounded-2xl p-6 text-center border border-gray-700 backdrop-blur-md"
+  >
+    <div className="text-5xl text-indigo-500 mb-4 flex justify-center">
+      {icon}
+    </div>
+    <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>
+    <p className="text-gray-300 text-sm">{desc}</p>
+  </motion.div>
 );
 
 const Home = () => {
+  const particlesInit = useCallback(async (engine) => {
+    await loadSlim(engine);
+  }, []);
+
   return (
-    <div className="bg-white text-gray-800 min-h-screen font-sans overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="bg-gray-50 text-gray-800 px-6 md:px-20 py-24">
-  <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
-    
-    {/* Left Content */}
-    <motion.div
-      variants={fadeIn("left", 0.2)}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true }}
-      className="flex-1"
-    >
-      <span className="text-sm uppercase text-gray-500 font-semibold tracking-wide">
-        Your Intelligent Inventory Partner
-      </span>
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight mb-6">
-        SmartInventory<br />Manage Smarter
-      </h1>
-      <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-xl">
-        A smart and secure inventory platform that helps you monitor products in real-time, get low-stock alerts, and manage roles efficiently.
-      </p>
-      <Link to="/signup">
-        <button className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg text-lg font-semibold transition shadow-lg">
-          Get Started
-        </button>
-      </Link>
-    </motion.div>
-
-    {/* Right Image */}
-    <motion.div
-      variants={fadeIn("right", 0.4)}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true }}
-      className="flex-1"
-    >
-      <img
-        src="https://via.placeholder.com/600x450"
-        alt="Smart Inventory"
-        className="rounded-2xl drop-shadow-lg w-full max-w-md md:max-w-full hover:scale-105 transition-transform duration-300"
+    <div className="relative overflow-hidden bg-gray-900 text-white min-h-screen">
+      {/* Background Particles */}
+      <Particles
+        id="tsparticles"
+        init={particlesInit}
+        options={{
+          fullScreen: { enable: true, zIndex: -1 },
+          particles: {
+            number: { value: 90 },
+            size: { value: 3 },
+            color: { value: "#00ffff" },
+            links: {
+              enable: true,
+              color: "#00ffff",
+              distance: 150,
+              opacity: 0.3,
+              width: 1,
+            },
+            move: { enable: true, speed: 1.5 },
+          },
+        }}
       />
-    </motion.div>
-  </div>
-</section>
 
+      {/* Hero Section */}
+      <section className="px-6 md:px-20 py-24">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 bg-black/40 p-8 rounded-3xl backdrop-blur-lg shadow-xl"
+        >
+          {/* Left Content */}
+          <motion.div variants={fadeIn("left", 0.3)} className="flex-1">
+            <span className="text-sm uppercase tracking-widest text-indigo-300 font-semibold">
+              Your Intelligent Inventory Partner
+            </span>
+            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mt-4 mb-6">
+              SmartInventory
+              <br />
+              <span className="text-indigo-400">Manage Smarter</span>
+            </h1>
+            <p className="text-lg text-gray-300 max-w-xl mb-8">
+              A smart, secure and responsive inventory management platform for
+              modern teams — real-time alerts, role-based dashboards, and
+              analytics.
+            </p>
+            <Link to="/signup">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg"
+              >
+                Get Started
+              </motion.button>
+            </Link>
+          </motion.div>
 
-      
+          {/* Right Image */}
+          <motion.div variants={fadeIn("right", 0.5)} className="flex-1">
+            <img
+              src="https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg"
+              alt="Smart Inventory"
+              className="rounded-3xl drop-shadow-2xl w-full hover:scale-105 transition-transform duration-500"
+            />
+          </motion.div>
+        </motion.div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">What You'll Build</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            A real-time platform with smart dashboards, alerting systems, analytics and secure role-based access.
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-800/80 to-gray-900/90 backdrop-blur-lg z-0" />
+
+        <div className="relative max-w-6xl mx-auto text-center mb-16 z-10">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
+            Platform Highlights
+          </h2>
+          <p className="text-indigo-200 mt-4 max-w-2xl mx-auto text-md font-light">
+            Delivering clarity, control, and confidence with every stocked item.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          <FeatureCard icon="📊" title="Product Dashboard" desc="Categorize items and monitor live stock levels with clean UI." />
-          <FeatureCard icon="🔔" title="Instant Alerts" desc="Get notified when items hit reorder levels via browser, email or Slack." />
-          <FeatureCard icon="🔐" title="Role-Based Login" desc="Admins and Staff get separate secure access and permissions." />
-          <FeatureCard icon="📈" title="Data Visualizations" desc="Interactive charts for better stock and sales analysis." />
-          <FeatureCard icon="📦" title="Inventory Logs" desc="Keep record of product moves: additions, deletions, transfers." />
-          <FeatureCard icon="💻" title="Built with Modern Stack" desc="React.js, Node/Django, PostgreSQL, Chart.js — SaaS ready." />
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto z-10">
+          <FeatureCard
+            icon={<FaBoxOpen />}
+            title="Product Dashboard"
+            desc="Categorize items and monitor live stock levels with a clean, real-time UI."
+          />
+          <FeatureCard
+            icon={<FaBell />}
+            title="Instant Alerts"
+            desc="Reorder triggers and low-stock warnings via browser, email, or Slack."
+          />
+          <FeatureCard
+            icon={<FaUserShield />}
+            title="Role-Based Login"
+            desc="Granular control with secure admin/staff level access and permissions."
+          />
+          <FeatureCard
+            icon={<FaChartBar />}
+            title="Data Visualizations"
+            desc="Real-time charts and KPIs for better decision-making and tracking."
+          />
+          <FeatureCard
+            icon={<FaCubes />}
+            title="Inventory Logs"
+            desc="Automatic logging of inventory changes including additions, deletions, and transfers."
+          />
+          <FeatureCard
+            icon={<FaCode />}
+            title="Modern Tech Stack"
+            desc="Built with React, Express/Django, PostgreSQL, Chart.js, and Tailwind — SaaS ready."
+          />
         </div>
       </section>
     </div>
