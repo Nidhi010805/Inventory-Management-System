@@ -1,8 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-
-
 // Create a new product
 exports.createProduct = async (req, res) => {
   const { sku, name, barcode, stock, threshold, expiryDate, categoryId } = req.body;
@@ -46,11 +44,27 @@ exports.createProduct = async (req, res) => {
         stock: Number(stock),
         threshold: Number(threshold),
         expiryDate: expiryDate ? new Date(expiryDate) : null,
+        createdById: req.user.id, // from auth middleware
         ...(categoryData?.id && {
           category: {
             connect: { id: categoryData.id },
           },
         }),
+      },
+      include: {
+        category: true,
+        createdBy: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Create audit log for product creation
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'CREATE_PRODUCT',
+        target: `Product SKU: ${sku}, Name: ${name}`,
       },
     });
 
@@ -61,15 +75,16 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-
-
 // Update product with SKU and barcode uniqueness check (excluding current product)
 exports.updateProduct = async (req, res) => {
   const { id } = req.params;
   const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
 
   try {
-    const existing = await prisma.product.findUnique({ where: { id: parseInt(id) } });
+    const existing = await prisma.product.findUnique({ 
+      where: { id: parseInt(id) } 
+    });
+    
     if (!existing) return res.status(404).json({ error: 'Product not found' });
 
     // Check SKU uniqueness excluding current product
@@ -102,7 +117,7 @@ exports.updateProduct = async (req, res) => {
 
     if (!categoryData && category?.name) {
       categoryData = await prisma.category.findFirst({ where: { name: category.name } });
-
+      
       if (!categoryData) {
         categoryData = await prisma.category.create({
           data: { name: category.name },
@@ -116,8 +131,8 @@ exports.updateProduct = async (req, res) => {
         sku,
         name,
         barcode,
-        stock,
-        threshold,
+        stock: Number(stock),
+        threshold: Number(threshold),
         expiryDate: new Date(expiryDate),
         ...(categoryData && {
           category: {
@@ -127,6 +142,9 @@ exports.updateProduct = async (req, res) => {
       },
       include: {
         category: true,
+        createdBy: {
+          select: { id: true, name: true },
+        },
       },
     });
 
@@ -145,19 +163,69 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Get all products
+// Get all products with enhanced filtering for low stock
 exports.getAllProducts = async (req, res) => {
   try {
+    const { lowStock, threshold = 10, search, category, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    
+    let whereClause = {};
+    
+    // Low stock filtering
+    if (lowStock === 'true') {
+      whereClause.OR = [
+        { stock: 0 }, // Out of stock
+        { 
+          AND: [
+            { stock: { gt: 0 } },
+            { stock: { lte: parseInt(threshold) } }
+          ]
+        } // Low stock
+      ];
+    }
+
+    // Search filtering
+    if (search) {
+      whereClause.OR = [
+        ...(whereClause.OR || []),
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+        { barcode: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    // Category filtering
+    if (category) {
+      whereClause.categoryId = parseInt(category);
+    }
+
+    // Dynamic ordering
+    const orderBy = {};
+    orderBy[sortBy] = sortOrder;
+
     const products = await prisma.product.findMany({
+      where: whereClause,
       include: {
         category: true,
         createdBy: {
           select: { id: true, name: true, role: true },
         },
       },
+      orderBy: lowStock === 'true' ? { stock: 'asc' } : orderBy
     });
-    res.json(products);
+
+    // Add stock status to each product
+    const productsWithStatus = products.map(product => ({
+      ...product,
+      stockStatus: product.stock === 0 ? 'out_of_stock' : 
+                  product.stock <= (product.threshold || 10) ? 'low_stock' : 'in_stock',
+      isLowStock: product.stock <= (product.threshold || 10),
+      isOutOfStock: product.stock === 0,
+      stockPercentage: Math.round((product.stock / Math.max(product.threshold * 2, 1)) * 100)
+    }));
+
+    res.json(productsWithStatus);
   } catch (err) {
+    console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
@@ -175,9 +243,22 @@ exports.getProductById = async (req, res) => {
         },
       },
     });
+    
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(product);
+
+    // Add stock status information
+    const productWithStatus = {
+      ...product,
+      stockStatus: product.stock === 0 ? 'out_of_stock' : 
+                  product.stock <= (product.threshold || 10) ? 'low_stock' : 'in_stock',
+      isLowStock: product.stock <= (product.threshold || 10),
+      isOutOfStock: product.stock === 0,
+      stockPercentage: Math.round((product.stock / Math.max(product.threshold * 2, 1)) * 100)
+    };
+
+    res.json(productWithStatus);
   } catch (err) {
+    console.error('Error fetching product:', err);
     res.status(400).json({ error: 'Failed to fetch product' });
   }
 };
@@ -203,7 +284,7 @@ exports.deleteProduct = async (req, res) => {
       data: {
         userId: req.user.id,
         action: 'DELETE_PRODUCT',
-        target: `Product SKU: ${existing.sku}`,
+        target: `Product SKU: ${existing.sku}, Name: ${existing.name}`,
       },
     });
 
@@ -213,40 +294,46 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete product' });
   }
 };
+
 // Check SKU or Barcode uniqueness (for live frontend validation)
 exports.checkUnique = async (req, res) => {
   const { sku, barcode, excludeId } = req.query;
 
   if (!sku && !barcode) {
-    return res.status(400).json({ error: 'sku or barcode query param required' });
+    return res.status(400).json({ error: 'SKU or barcode is required' });
   }
 
   try {
-    const conditions = [];
-
-    if (sku) conditions.push({ sku });
-    if (barcode) conditions.push({ barcode });
-
-    const where = {
-      OR: conditions,
-      ...(excludeId ? { NOT: { id: Number(excludeId) } } : {}),
-    };
-
-    const found = await prisma.product.findFirst({ where });
-
-    if (found) {
-      if (sku && found.sku === sku) return res.json({ exists: true, field: 'sku' });
-      if (barcode && found.barcode === barcode) return res.json({ exists: true, field: 'barcode' });
+    const whereConditions = [];
+    
+    if (sku) {
+      whereConditions.push({ sku });
+    }
+    
+    if (barcode) {
+      whereConditions.push({ barcode });
     }
 
-    res.json({ exists: false });
+    let whereClause = { OR: whereConditions };
+    
+    if (excludeId) {
+      whereClause.NOT = { id: parseInt(excludeId) };
+    }
+
+    const existing = await prisma.product.findFirst({ where: whereClause });
+
+    res.json({ 
+      exists: !!existing,
+      field: existing ? (existing.sku === sku ? 'sku' : 'barcode') : null,
+      message: existing ? `${existing.sku === sku ? 'SKU' : 'Barcode'} already exists` : 'Available'
+    });
   } catch (err) {
-    console.error('Check unique error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Uniqueness check error:', err);
+    res.status(500).json({ error: 'Failed to check uniqueness' });
   }
 };
 
-// Get category-wise product count
+// Get category-wise product count for analytics
 exports.getCategoryWiseCount = async (req, res) => {
   try {
     const result = await prisma.product.groupBy({
@@ -259,29 +346,61 @@ exports.getCategoryWiseCount = async (req, res) => {
     const data = result.map(r => {
       const cat = categories.find(c => c.id === r.categoryId);
       return {
-        category: cat?.name || "Unknown",
+        category: cat?.name || "Uncategorized",
         count: r._count.id
       };
     });
 
+    // Add uncategorized products
+    const uncategorizedCount = await prisma.product.count({
+      where: { categoryId: null }
+    });
+
+    if (uncategorizedCount > 0) {
+      data.push({
+        category: "Uncategorized",
+        count: uncategorizedCount
+      });
+    }
+
     res.json(data);
   } catch (err) {
+    console.error('Category count error:', err);
     res.status(500).json({ error: "Failed to fetch category counts" });
   }
 };
 
-// Get low stock count
+// Get low stock count for dashboard analytics
 exports.getLowStockCount = async (req, res) => {
   try {
-    const lowStock = await prisma.product.findMany({
+    const { threshold = 10 } = req.query;
+    
+    const lowStockProducts = await prisma.product.findMany({
       where: {
-        stock: {
-          lt: prisma.product.fields.threshold,
-        },
+        OR: [
+          { stock: 0 },
+          { 
+            AND: [
+              { stock: { gt: 0 } },
+              { stock: { lte: parseInt(threshold) } }
+            ]
+          }
+        ]
       },
+      select: { id: true, name: true, sku: true, stock: true, threshold: true }
     });
-    res.json({ count: lowStock.length });
+
+    const outOfStock = lowStockProducts.filter(p => p.stock === 0);
+    const lowStock = lowStockProducts.filter(p => p.stock > 0);
+
+    res.json({ 
+      total: lowStockProducts.length,
+      outOfStock: outOfStock.length,
+      lowStock: lowStock.length,
+      products: lowStockProducts
+    });
   } catch (err) {
+    console.error('Low stock count error:', err);
     res.status(500).json({ error: "Failed to fetch low stock data" });
   }
 };
@@ -289,23 +408,218 @@ exports.getLowStockCount = async (req, res) => {
 // Get recent product activity (created/updated in last 7 days)
 exports.getRecentActivity = async (req, res) => {
   try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const { days = 7 } = req.query;
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - parseInt(days));
 
     const recent = await prisma.product.findMany({
       where: {
         OR: [
-          { createdAt: { gte: sevenDaysAgo } },
-          { updatedAt: { gte: sevenDaysAgo } },
+          { createdAt: { gte: dateThreshold } },
+          { updatedAt: { gte: dateThreshold } },
         ],
+      },
+      include: {
+        category: { select: { name: true } },
+        createdBy: { select: { name: true } }
       },
       orderBy: {
         updatedAt: 'desc',
       },
+      take: 50 // Limit to 50 most recent
     });
 
     res.json(recent);
   } catch (err) {
+    console.error('Recent activity error:', err);
     res.status(500).json({ error: "Failed to fetch recent activity" });
   }
+};
+
+// Get comprehensive stock status for dashboard
+exports.getStockStatus = async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      select: { 
+        id: true, 
+        name: true, 
+        sku: true, 
+        stock: true, 
+        threshold: true,
+        category: { select: { name: true } }
+      }
+    });
+
+    const stockAnalysis = {
+      total: products.length,
+      outOfStock: products.filter(p => p.stock === 0).length,
+      lowStock: products.filter(p => p.stock > 0 && p.stock <= (p.threshold || 10)).length,
+      inStock: products.filter(p => p.stock > (p.threshold || 10)).length,
+      totalValue: products.reduce((sum, p) => sum + p.stock, 0),
+      averageStock: products.length > 0 ? Math.round(products.reduce((sum, p) => sum + p.stock, 0) / products.length) : 0,
+      products: products.map(product => ({
+        ...product,
+        status: product.stock === 0 ? 'out_of_stock' : 
+                product.stock <= (product.threshold || 10) ? 'low_stock' : 'in_stock',
+        stockPercentage: Math.round((product.stock / Math.max(product.threshold * 2, 1)) * 100)
+      }))
+    };
+
+    res.json(stockAnalysis);
+  } catch (error) {
+    console.error('Error fetching stock status:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Update product stock only (for quick stock adjustments)
+exports.updateProductStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stock, note = '' } = req.body;
+
+    if (stock < 0) {
+      return res.status(400).json({ error: 'Stock cannot be negative' });
+    }
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: { 
+        stock: parseInt(stock), 
+        updatedAt: new Date() 
+      },
+      include: {
+        category: true,
+        createdBy: { select: { id: true, name: true } }
+      }
+    });
+
+    // Create audit log for stock update
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'ADJUSTMENT',
+        target: `Product ID: ${id}, Quantity: ${parseInt(stock) - existingProduct.stock}, Note: Stock adjustment - ${note}`,
+      },
+    });
+
+    // Add stock status information
+    const productWithStatus = {
+      ...updatedProduct,
+      stockStatus: updatedProduct.stock === 0 ? 'out_of_stock' : 
+                  updatedProduct.stock <= (updatedProduct.threshold || 10) ? 'low_stock' : 'in_stock',
+      isLowStock: updatedProduct.stock <= (updatedProduct.threshold || 10),
+      isOutOfStock: updatedProduct.stock === 0,
+      stockPercentage: Math.round((updatedProduct.stock / Math.max(updatedProduct.threshold * 2, 1)) * 100)
+    };
+
+    res.json(productWithStatus);
+  } catch (error) {
+    console.error('Error updating product stock:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Bulk update products (for batch operations)
+exports.bulkUpdateProducts = async (req, res) => {
+  try {
+    const { products } = req.body; // Array of { id, stock, threshold?, note? }
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ error: 'Products array is required' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const productUpdate of products) {
+      try {
+        const { id, stock, threshold, note } = productUpdate;
+
+        if (!id || stock === undefined) {
+          errors.push(`Product update missing required fields: id and stock`);
+          continue;
+        }
+
+        const existingProduct = await prisma.product.findUnique({
+          where: { id: parseInt(id) }
+        });
+
+        if (!existingProduct) {
+          errors.push(`Product with ID ${id} not found`);
+          continue;
+        }
+
+        const updateData = { 
+          stock: parseInt(stock), 
+          updatedAt: new Date() 
+        };
+
+        if (threshold !== undefined) {
+          updateData.threshold = parseInt(threshold);
+        }
+
+        const updatedProduct = await prisma.product.update({
+          where: { id: parseInt(id) },
+          data: updateData
+        });
+
+        // Create audit log
+        await prisma.auditLog.create({
+          data: {
+            userId: req.user.id,
+            action: 'BULK_UPDATE',
+            target: `Product ID: ${id}, Stock: ${stock}${threshold ? `, Threshold: ${threshold}` : ''}, Note: ${note || 'Bulk update'}`,
+          },
+        });
+
+        results.push({
+          id: updatedProduct.id,
+          name: existingProduct.name,
+          sku: existingProduct.sku,
+          previousStock: existingProduct.stock,
+          newStock: updatedProduct.stock,
+          success: true
+        });
+
+      } catch (error) {
+        errors.push(`Error updating product ${productUpdate.id}: ${error.message}`);
+      }
+    }
+
+    res.json({
+      message: 'Bulk update completed',
+      successful: results.length,
+      failed: errors.length,
+      results,
+      errors
+    });
+
+  } catch (error) {
+    console.error('Error in bulk update:', error);
+    res.status(500).json({ error: 'Server error during bulk update' });
+  }
+};
+
+module.exports = {
+  createProduct: exports.createProduct,
+  updateProduct: exports.updateProduct,
+  getAllProducts: exports.getAllProducts,
+  getProductById: exports.getProductById,
+  deleteProduct: exports.deleteProduct,
+  checkUnique: exports.checkUnique,
+  getCategoryWiseCount: exports.getCategoryWiseCount,
+  getLowStockCount: exports.getLowStockCount,
+  getRecentActivity: exports.getRecentActivity,
+  getStockStatus: exports.getStockStatus,
+  updateProductStock: exports.updateProductStock,
+  bulkUpdateProducts: exports.bulkUpdateProducts
 };
