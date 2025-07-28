@@ -28,8 +28,13 @@ app.use('/api/users', userRoutes);
 app.use('/api/inventory', protect, inventoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/stock', protect, stockRoutes); // ✅ NEW STOCK MANAGEMENT API
+app.use('/api/stock', protect, stockRoutes); 
 app.use('/api/admin', protect, dashboardRoutes);
+
+app.get('/', (req, res) => {
+  res.send('✅ Inventory Management System backend is running!');
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
