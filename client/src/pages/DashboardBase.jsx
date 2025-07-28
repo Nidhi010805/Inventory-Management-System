@@ -13,13 +13,13 @@ import {
   Moon,
   BellRing,
   Settings,
+  TrendingUp, // 🚀 NEW: Stock management icon
 } from 'lucide-react';
 
 export default function DashboardBase({ role }) {
   const location = useLocation();
   const { user } = useAuth();
   
-
   const sidebarSections = [
     {
       title: 'Dashboard',
@@ -28,16 +28,16 @@ export default function DashboardBase({ role }) {
       ],
     },
     {
-  title: 'Inventory',
-  links: [
-    { icon: <PackageCheck size={18} />, label: 'Products', href: `/${role}/products` },
-    ...(role === 'admin'
-      ? [{ icon: <ClipboardList size={18} />, label: 'Logs', href: `/${role}/logs` }]
-      : []),
-  ],
-},
-
-    
+      title: 'Inventory',
+      links: [
+        { icon: <PackageCheck size={18} />, label: 'Products', href: `/${role}/products` },
+        // 🚀 NEW: Direct link to stock management (same as products but with focus on stock)
+        { icon: <TrendingUp size={18} />, label: 'Stock Management', href: `/${role}/products?tab=stock` },
+        ...(role === 'admin'
+          ? [{ icon: <ClipboardList size={18} />, label: 'Logs', href: `/${role}/logs` }]
+          : []),
+      ],
+    },
   ];
 
   return (
@@ -46,13 +46,14 @@ export default function DashboardBase({ role }) {
       <aside className="w-64 bg-[#1e293b] flex flex-col justify-between p-4 shadow-md">
         <div>
           <h2 className="text-2xl font-bold text-white mb-6 px-2">InventorySys</h2>
-         <Link
-    to="/"
-    className="flex items-center gap-3 px-4 py-2 rounded-lg mb-4 text-gray-400 hover:text-white hover:bg-gray-700 transition"
-  >
-    <LayoutDashboard size={18} />
-    <span className="text-sm">Home</span>
-  </Link>
+          <Link
+            to="/"
+            className="flex items-center gap-3 px-4 py-2 rounded-lg mb-4 text-gray-400 hover:text-white hover:bg-gray-700 transition"
+          >
+            <LayoutDashboard size={18} />
+            <span className="text-sm">Home</span>
+          </Link>
+          
           {/* Sidebar Sections */}
           <nav className="flex flex-col gap-6">
             {sidebarSections.map((section) => (
@@ -61,7 +62,7 @@ export default function DashboardBase({ role }) {
                   {section.title}
                 </p>
                 {section.links.map(({ icon, label, href }) => {
-                  const isActive = location.pathname === href;
+                  const isActive = location.pathname === href.split('?')[0]; // Handle query params
                   return (
                     <Link
                       key={label}
@@ -85,14 +86,14 @@ export default function DashboardBase({ role }) {
         {/* Logout */}
         <button
           onClick={async () => {
-  try {
-    await axios.post('/api/auth/logout'); // backend endpoint to clear cookie
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  } catch (err) {
-    console.error('Logout failed:', err);
-  }
-}}
+            try {
+              await axios.post('/api/auth/logout');
+              localStorage.removeItem('user');
+              window.location.href = '/login';
+            } catch (err) {
+              console.error('Logout failed:', err);
+            }
+          }}
           className="flex items-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900 px-4 py-2 rounded-md transition"
         >
           <LogOut size={18} />
@@ -103,52 +104,27 @@ export default function DashboardBase({ role }) {
       {/* Main Panel */}
       <div className="flex-1 flex flex-col bg-[#0f172a]">
         {/* Top Navbar */}
-        <header className="h-16 bg-[#1e293b] flex items-center justify-between px-6 shadow-sm">
-          <h1 className="text-xl font-semibold text-white">
-            {role === 'admin' ? 'Admin' : 'Staff'} Dashboard
-          </h1>
-
+        <header className="bg-[#1e293b] px-6 py-4 flex justify-between items-center border-b border-gray-700">
+          <div>
+            <h1 className="text-xl font-semibold text-white">
+              {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
+            </h1>
+            <p className="text-sm text-gray-400">Welcome back, {user?.name}</p>
+          </div>
+          
           <div className="flex items-center gap-4">
-           {role === 'admin' && (
-  <Link to={`/${role}/alerts`} className="text-gray-400 hover:text-white relative">
-    <BellRing size={18} />
-    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-  </Link>
-)}
-
-<button className="text-gray-400 hover:text-white">
-  <Moon size={18} />
-</button>
-
-{role === 'admin' && (
-  <Link
-    to={`/${role}/settings`}
-    className={`text-gray-400 hover:text-white ${
-      location.pathname === `/${role}/settings` ? 'text-white' : ''
-    }`}
-  >
-    <Settings size={18} />
-  </Link>
-)}
-
-
-           <div className="flex items-center gap-2">
-  <div className="w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center text-sm font-semibold">
-    {user?.name?.charAt(0)?.toUpperCase()}
-  </div>
-  <div className="flex flex-col items-end text-xs text-gray-300">
-    <span>{user?.name}</span>
-    <span className="text-[10px] text-gray-500">ID: {user?.id}</span>
-  </div>
-</div>
-
-
-
+            <button className="relative p-2 text-gray-400 hover:text-white transition">
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+              <UserCircle size={20} className="text-gray-300" />
+            </div>
           </div>
         </header>
 
-        {/* Outlet content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>
