@@ -8,7 +8,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const dashboardRoutes = require('./routes/dashboard');
-const stockRoutes = require('./routes/stockRoutes'); // ✅ NEW STOCK ROUTES
+const stockRoutes = require('./routes/stockRoutes'); 
 const { protect } = require('./middleware/authMiddleware');
 
 const app = express();
@@ -21,17 +21,11 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins,
   credentials: true,
+  optionsSuccessStatus: 200,
 }));
+
 
 
 // Public routes
