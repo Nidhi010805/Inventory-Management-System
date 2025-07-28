@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+ import logo from '../assets/d2.png';
 import { fadeIn, staggerContainer } from "../components/utils/motionVariants";
 
 const steps = [
@@ -51,18 +52,19 @@ const Home = () => {
 
     {/* Right Image */}
     <motion.div
-      variants={fadeIn("right", 0.4)}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true }}
-      className="flex-1"
-    >
-      <img
-        src="https://via.placeholder.com/600x450"
-        alt="Smart Inventory"
-        className="rounded-2xl drop-shadow-lg w-full max-w-md md:max-w-full hover:scale-105 transition-transform duration-300"
-      />
-    </motion.div>
+  variants={fadeIn("right", 0.4)}
+  initial="hidden"
+  whileInView="show"
+  viewport={{ once: true }}
+  className="flex-1 flex justify-center items-start mt-6 md:mt-12 lg:mt-20"
+>
+  <img
+    src={logo}
+    alt="Smart Inventory"
+    className="rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-6xl object-contain transform rotate-3 hover:scale-105 transition-all duration-300"
+  />
+</motion.div>
+
   </div>
 </section>
 
