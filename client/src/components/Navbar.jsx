@@ -7,7 +7,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();  // clear user from context
+    logout(); 
     navigate('/login');
   };
 

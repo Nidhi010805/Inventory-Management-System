@@ -1,7 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all categories
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await prisma.category.findMany();
@@ -11,7 +10,6 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// Create new category
 exports.createCategory = async (req, res) => {
   const { name } = req.body;
   try {
@@ -22,7 +20,6 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// Update category
 exports.updateCategory = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -37,7 +34,6 @@ exports.updateCategory = async (req, res) => {
   }
 };
 
-// Delete category
 exports.deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {

@@ -1,4 +1,3 @@
-// src/pages/StaffDashboard.jsx
 import React from 'react';
 import { Card, CardContent } from '../components/Card';
 

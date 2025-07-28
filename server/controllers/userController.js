@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-// Get logged-in user profile
 exports.getMyProfile = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -26,7 +25,6 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-// Update current user profile
 exports.updateUserProfile = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -58,7 +56,6 @@ exports.updateUserProfile = async (req, res) => {
   }
 };
 
-// Get all users (admin only)
 exports.getAllUsers = async (req, res) => {
   try {
     if (req.user.role !== 'ADMIN') {
@@ -82,7 +79,6 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Update user role (admin only)
 exports.updateUserRole = async (req, res) => {
   try {
     if (req.user.role !== 'ADMIN') {
@@ -104,7 +100,6 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-// Delete user (admin only)
 exports.deleteUser = async (req, res) => {
   try {
     if (req.user.role !== 'ADMIN') {

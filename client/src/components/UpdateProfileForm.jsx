@@ -58,7 +58,6 @@ const UpdateProfileForm = () => {
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Update Profile</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Name
@@ -74,7 +73,6 @@ const UpdateProfileForm = () => {
 
         </div>
 
-        {/* Email */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Email
@@ -89,7 +87,6 @@ const UpdateProfileForm = () => {
           />
         </div>
 
-        {/* Password */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             New Password
@@ -104,7 +101,6 @@ const UpdateProfileForm = () => {
           />
         </div>
 
-        {/* Role (admin only) */}
         {isAdmin && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -122,7 +118,6 @@ const UpdateProfileForm = () => {
           </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200"
@@ -131,7 +126,6 @@ const UpdateProfileForm = () => {
         </button>
       </form>
 
-      {/* Message */}
       {message && (
         <div className="mt-6 text-center text-sm font-medium text-green-600">
           {message}
