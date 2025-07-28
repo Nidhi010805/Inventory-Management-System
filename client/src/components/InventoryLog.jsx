@@ -42,7 +42,7 @@ export default function InventoryLog() {
     try {
       await axiosClient.delete(`/inventory/${logId}`);
       toast.success('Inventory log deleted successfully');
-      fetchLogs(); // Refresh the list
+      fetchLogs(); 
     } catch (err) {
       toast.error('Failed to delete inventory log');
     }
@@ -53,7 +53,7 @@ export default function InventoryLog() {
   };
 
   const handleEditSuccess = () => {
-    fetchLogs(); // Refresh the list after successful edit
+    fetchLogs(); 
   };
 
   const getActionBadge = (action) => {
@@ -207,7 +207,6 @@ export default function InventoryLog() {
         )}
       </div>
 
-      {/* Edit Modal */}
       {editModal.show && (
         <EditInventoryModal
           log={editModal.log}
