@@ -4,7 +4,6 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-// Utility function to create JWT token
 const createToken = (user) => {
   return jwt.sign(
     { id: user.id, role: user.role },
@@ -13,7 +12,6 @@ const createToken = (user) => {
   );
 };
 
-// POST /api/auth/register
 exports.registerUser = async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -46,7 +44,6 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// POST /api/auth/login
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -73,7 +70,6 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// GET /api/auth/logout
 exports.logoutUser = (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'Logged out successfully.' });
