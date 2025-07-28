@@ -152,5 +152,5 @@ Multi-warehouse support
 
 Exportable reports (PDF, Excel)
 
-[![Watch the video](https://drive.google.com/file/d/1p9c6IDvVdP4zCP7aAzNTX0Lvk2tSZObG/view?usp=drivesdk)
+Watch the video : https://drive.google.com/file/d/1p9c6IDvVdP4zCP7aAzNTX0Lvk2tSZObG/view?usp=drivesdk
 
