@@ -29,7 +29,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
       return;
     }
 
-    // Check for sale operation if enough stock
     if (operation === 'sale' && parseInt(formData.quantity) > product.stock) {
       toast.error(`Insufficient stock. Available: ${product.stock}, Requested: ${formData.quantity}`);
       return;
@@ -42,7 +41,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
         quantity: parseInt(formData.quantity),
       };
 
-      // Add specific fields based on operation
       if (operation === 'sale' && formData.orderId) {
         payload.orderId = formData.orderId;
       }
@@ -73,8 +71,8 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
 
       if (response.data.success) {
         toast.success(response.data.message);
-        onSuccess(); // Refresh the product list
-        onClose(); // Close modal
+        onSuccess(); 
+        onClose(); 
       } else {
         toast.error(response.data.message);
       }
@@ -122,7 +120,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">{config.title}</h3>
           <button
@@ -133,7 +130,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* Product Info */}
         <div className="bg-gray-50 rounded p-3 mb-4">
           <p className="font-medium">{product.name}</p>
           <p className="text-sm text-gray-600">SKU: {product.sku}</p>
@@ -145,9 +141,7 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Quantity */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Quantity *
@@ -164,7 +158,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
             />
           </div>
 
-          {/* Order ID (for sale and return) */}
           {(operation === 'sale' || operation === 'return') && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -181,7 +174,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Return Reason */}
           {operation === 'return' && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -198,7 +190,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Restock fields */}
           {operation === 'restock' && (
             <>
               <div className="mb-4">
@@ -242,7 +233,6 @@ const StockModal = ({ product, operation, onClose, onSuccess }) => {
             </>
           )}
 
-          {/* Action Buttons */}
           <div className="flex gap-3 mt-6">
             <button
               type="button"
