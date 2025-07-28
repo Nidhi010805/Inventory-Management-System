@@ -15,10 +15,24 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://inventory-management-system-steel-sigma.vercel.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
+
 
 // Public routes
 app.use('/api/auth', authRoutes);
