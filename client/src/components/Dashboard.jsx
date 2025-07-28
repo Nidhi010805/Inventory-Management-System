@@ -15,11 +15,10 @@ const data = [
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const role = user?.role || 'guest'; // roles: admin, staff, guest
+  const role = user?.role || 'guest'; 
 
   return (
     <div className="flex min-h-screen bg-[#0f172a] text-white">
-      {/* Sidebar */}
       <aside className="w-64 bg-[#1e293b] p-6 space-y-6 hidden md:block">
         <h2 className="text-2xl font-bold">RePack</h2>
         <nav className="space-y-4">
@@ -51,9 +50,7 @@ export default function Dashboard() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-6">
-        {/* Top Bar */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-semibold">Inventory Dashboard</h1>
           <button className="bg-[#1e293b] text-white px-3 py-1 rounded hover:bg-[#334155] flex items-center gap-2">
@@ -61,7 +58,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="bg-[#4f46e5] p-4 rounded-xl shadow">
             <h2 className="text-xl font-bold">26K</h2>
@@ -81,7 +77,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Chart Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Stock Overview</h2>
           <div className="flex gap-2">
@@ -91,7 +86,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Chart */}
         <div className="bg-[#1e293b] p-6 rounded-xl shadow">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data}>
