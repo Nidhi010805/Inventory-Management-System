@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PackageCheck, Bell, Users, ClipboardList } from 'lucide-react';
+import Analytics from '../components/Analytics'; // adjust path if needed
+
 import axios from 'axios';
 import axiosClient from '../api/axiosClient';
 import { Line } from 'react-chartjs-2';
@@ -84,10 +86,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-white clip-diagonal-light absolute top-0 left-0" />
-        <div className="w-full h-full bg-[#0f172a] clip-diagonal-dark absolute top-0 left-0" />
-      </div>
+      <div className="absolute inset-0 z-0 bg-[#0f172a]" />
+
 
       <div className="relative z-10 p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map(({ icon, label, value, change, bg, chartColor, onClick }) => (
@@ -124,6 +124,9 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+      <div className="relative z-10 mt-10 px-6">
+  <Analytics />
+</div>
     </div>
   );
 }

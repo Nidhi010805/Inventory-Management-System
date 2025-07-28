@@ -1,48 +1,66 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Create a new product with SKU and barcode uniqueness check
+
+
+// Create a new product
 exports.createProduct = async (req, res) => {
-  const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
+  const { sku, name, barcode, stock, threshold, expiryDate, categoryId } = req.body;
 
   try {
+    // Check if SKU or barcode already exists
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { sku: sku },
+          { barcode: barcode },
+        ],
+      },
+    });
+
+    if (existingProduct) {
+      return res.status(400).json({
+        error: existingProduct.sku === sku
+          ? 'SKU already exists'
+          : 'Barcode already exists',
+      });
+    }
+
+    // Fetch category data if provided
+    let categoryData = null;
+    if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
+      categoryData = await prisma.category.findUnique({
+        where: { id: Number(categoryId) },
+      });
+
+      if (!categoryData) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
         sku,
         name,
         barcode,
-        stock,
-        threshold,
-        expiryDate: new Date(expiryDate),
-        category: {
-          connect: { id: category }, // assuming category is ID
-        },
+        stock: Number(stock),
+        threshold: Number(threshold),
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        ...(categoryData?.id && {
+          category: {
+            connect: { id: categoryData.id },
+          },
+        }),
       },
     });
 
     res.status(201).json(product);
-  } catch (err) {
-  console.error("Product creation error:", err);
-  
-
-  if (err.code === 'P2002') {
-    const duplicateField = err.meta?.target?.includes('sku')
-      ? 'SKU'
-      : err.meta?.target?.includes('barcode')
-      ? 'Barcode'
-      : 'Field';
-
-    return res.status(400).json({
-      error: `${duplicateField} already exists. Please use a different one.`,
-    });
+  } catch (error) {
+    console.error('Create product error:', error);
+    res.status(500).json({ error: 'Failed to create product' });
   }
-
-  res.status(500).json({
-    error: 'Failed to create product. Please try again.',
-  });
-}
-
 };
+
 
 
 // Update product with SKU and barcode uniqueness check (excluding current product)
@@ -225,5 +243,69 @@ exports.checkUnique = async (req, res) => {
   } catch (err) {
     console.error('Check unique error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get category-wise product count
+exports.getCategoryWiseCount = async (req, res) => {
+  try {
+    const result = await prisma.product.groupBy({
+      by: ['categoryId'],
+      _count: { id: true },
+    });
+
+    const categories = await prisma.category.findMany();
+
+    const data = result.map(r => {
+      const cat = categories.find(c => c.id === r.categoryId);
+      return {
+        category: cat?.name || "Unknown",
+        count: r._count.id
+      };
+    });
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch category counts" });
+  }
+};
+
+// Get low stock count
+exports.getLowStockCount = async (req, res) => {
+  try {
+    const lowStock = await prisma.product.findMany({
+      where: {
+        stock: {
+          lt: prisma.product.fields.threshold,
+        },
+      },
+    });
+    res.json({ count: lowStock.length });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch low stock data" });
+  }
+};
+
+// Get recent product activity (created/updated in last 7 days)
+exports.getRecentActivity = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recent = await prisma.product.findMany({
+      where: {
+        OR: [
+          { createdAt: { gte: sevenDaysAgo } },
+          { updatedAt: { gte: sevenDaysAgo } },
+        ],
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    res.json(recent);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch recent activity" });
   }
 };

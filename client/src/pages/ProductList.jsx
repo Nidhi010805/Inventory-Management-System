@@ -3,25 +3,62 @@ import { getAllProducts, deleteProduct } from "../api/productApi";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // 🔍 New state
   const { user } = useAuth();
   const role = user?.role?.toLowerCase(); // ✅ Normalize role to lowercase
 
   const fetchProducts = async () => {
-  try {
-    const res = await getAllProducts();
+    try {
+      const res = await getAllProducts();
+      setProducts(res.data);
+    } catch (err) {
+      toast.error("Failed to load products.");
+    }
+  };
+const exportToExcel = () => {
+  const data = filteredProducts.map((p) => ({
+    SKU: p.sku,
+    Name: p.name,
+    Stock: p.stock,
+    Threshold: p.threshold,
+    Expiry: new Date(p.expiryDate).toLocaleDateString(),
+    Category: p.category?.name || "—",
+  }));
 
-   
-    
-
-    setProducts(res.data);
-  } catch (err) {
-    toast.error("Failed to load products.");
-  }
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(file, "products.xlsx");
 };
 
+const exportToPDF = () => {
+  const doc = new jsPDF();
+  const tableColumn = ["SKU", "Name", "Stock", "Threshold", "Expiry", "Category"];
+  const tableRows = filteredProducts.map((p) => [
+    p.sku,
+    p.name,
+    p.stock,
+    p.threshold,
+    new Date(p.expiryDate).toLocaleDateString(),
+    p.category?.name || "—",
+  ]);
+
+  autoTable(doc, {
+    head: [tableColumn],
+    body: tableRows,
+  });
+
+  doc.save("products.pdf");
+};
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete this product?")) return;
@@ -38,6 +75,13 @@ const ProductList = () => {
     fetchProducts();
   }, []);
 
+  // 🔍 Filtered product list based on search term
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.barcode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -51,6 +95,30 @@ const ProductList = () => {
           </Link>
         )}
       </div>
+
+      {/* 🔍 Search Input */}
+      <input
+        type="text"
+        placeholder="Search by name, barcode or category"
+       className="mb-4 p-2 border border-gray-300 rounded w-full text-black"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <div className="flex gap-4 mb-4">
+  <button
+    onClick={exportToExcel}
+    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+  >
+    Export to Excel
+  </button>
+  <button
+    onClick={exportToPDF}
+    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+  >
+    Export to PDF
+  </button>
+</div>
+
 
       <div className="overflow-x-auto bg-white rounded shadow-md">
         <table className="min-w-full text-sm text-left border border-gray-200 text-gray-800">
@@ -66,15 +134,14 @@ const ProductList = () => {
             </tr>
           </thead>
           <tbody>
-            {products.length === 0 ? (
+            {filteredProducts.length === 0 ? (
               <tr>
                 <td colSpan="7" className="text-center py-6 text-gray-500">
                   No products found.
                 </td>
               </tr>
             ) : (
-              products.map((p) => (
-                
+              filteredProducts.map((p) => (
                 <tr
                   key={p.id}
                   className={`hover:bg-gray-50 ${

@@ -25,7 +25,7 @@ app.use('/api/auth', authRoutes);
 // Protected routes
 app.use('/api/users', userRoutes);
 app.use('/api/inventory', protect, inventoryRoutes);
-app.use('/api/products', protect, productRoutes);
+app.use('/api/products',  productRoutes);
 app.use('/api/categories',  categoryRoutes);
 
 app.use('/api/admin', protect, dashboardRoutes);

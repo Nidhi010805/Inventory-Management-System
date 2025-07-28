@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
+const { protect } = require('../middleware/authMiddleware');
 
-// All routes are already protected by verifyUser middleware in app.js
-router.post('/', productController.createProduct);
-router.get('/', productController.getAllProducts);
-router.get('/:id', productController.getProductById);
-router.put('/:id', productController.updateProduct);
-router.delete('/:id', productController.deleteProduct);
+router.get('/analytics/category-count', productController.getCategoryWiseCount);
+router.get('/analytics/low-stock-count', productController.getLowStockCount);
+router.get('/analytics/recent-activity', productController.getRecentActivity);
 
-// Single route for checking SKU or Barcode uniqueness
-router.get('/check-unique', productController.checkUnique);
+router.post('/', protect, productController.createProduct);
+router.get('/', protect, productController.getAllProducts);
+router.get('/:id', protect, productController.getProductById);
+router.put('/:id', protect, productController.updateProduct);
+router.delete('/:id', protect, productController.deleteProduct);
 
 module.exports = router;
