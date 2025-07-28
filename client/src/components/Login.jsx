@@ -22,7 +22,7 @@ export default function Login() {
     try {
       const res = await axiosClient.post('/auth/login', { email, password });
       const userData = res?.data?.user;
-      const role = userData?.role?.toLowerCase(); // ✅ Normalize role
+      const role = userData?.role?.toLowerCase(); 
 
       login(userData);
 
@@ -30,7 +30,6 @@ export default function Login() {
       console.log('🧠 userData:', userData);
       console.log('🧠 role:', role);
 
-      // ✅ Role-based redirect
       if (role === 'admin') navigate('/admin/dashboard');
       else if (role === 'staff') navigate('/staff/dashboard');
       else {
