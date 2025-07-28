@@ -3,12 +3,10 @@ const prisma = new PrismaClient();
 
 
 
-// Create a new product
 exports.createProduct = async (req, res) => {
   const { sku, name, barcode, stock, threshold, expiryDate, categoryId } = req.body;
 
   try {
-    // Check if SKU or barcode already exists
     const existingProduct = await prisma.product.findFirst({
       where: {
         OR: [
@@ -26,7 +24,6 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    // Fetch category data if provided
     let categoryData = null;
     if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
       categoryData = await prisma.category.findUnique({
@@ -63,7 +60,6 @@ exports.createProduct = async (req, res) => {
 
 
 
-// Update product with SKU and barcode uniqueness check (excluding current product)
 exports.updateProduct = async (req, res) => {
   const { id } = req.params;
   const { sku, name, barcode, category, stock, threshold, expiryDate } = req.body;
@@ -72,7 +68,6 @@ exports.updateProduct = async (req, res) => {
     const existing = await prisma.product.findUnique({ where: { id: parseInt(id) } });
     if (!existing) return res.status(404).json({ error: 'Product not found' });
 
-    // Check SKU uniqueness excluding current product
     const skuExists = await prisma.product.findFirst({
       where: {
         sku,
@@ -83,7 +78,6 @@ exports.updateProduct = async (req, res) => {
       return res.status(400).json({ error: `SKU "${sku}" already exists.` });
     }
 
-    // Check barcode uniqueness excluding current product
     const barcodeExists = await prisma.product.findFirst({
       where: {
         barcode,
@@ -145,7 +139,6 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Get all products
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await prisma.product.findMany({
@@ -162,7 +155,6 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// Get product by ID
 exports.getProductById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -182,7 +174,6 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Delete a product by ID
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
 
@@ -213,7 +204,6 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete product' });
   }
 };
-// Check SKU or Barcode uniqueness (for live frontend validation)
 exports.checkUnique = async (req, res) => {
   const { sku, barcode, excludeId } = req.query;
 
@@ -246,7 +236,6 @@ exports.checkUnique = async (req, res) => {
   }
 };
 
-// Get category-wise product count
 exports.getCategoryWiseCount = async (req, res) => {
   try {
     const result = await prisma.product.groupBy({
@@ -270,7 +259,6 @@ exports.getCategoryWiseCount = async (req, res) => {
   }
 };
 
-// Get low stock count
 exports.getLowStockCount = async (req, res) => {
   try {
     const lowStock = await prisma.product.findMany({
@@ -286,7 +274,6 @@ exports.getLowStockCount = async (req, res) => {
   }
 };
 
-// Get recent product activity (created/updated in last 7 days)
 exports.getRecentActivity = async (req, res) => {
   try {
     const sevenDaysAgo = new Date();
