@@ -11,21 +11,19 @@ const EditInventoryModal = ({ log, onClose, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Helper function to extract product ID from target string
+
   function extractProductIdFromTarget(target) {
     if (!target) return '';
     const match = target.match(/Product ID: (\d+)/);
     return match ? match[1] : '';
   }
 
-  // Helper function to extract quantity from target string
   function extractQuantityFromTarget(target) {
     if (!target) return '';
     const match = target.match(/Quantity: (-?\d+)/);
     return match ? match[1] : '';
   }
 
-  // Helper function to extract note from target string
   function extractNoteFromTarget(target) {
     if (!target) return '';
     const match = target.match(/Note: (.+)$/);
