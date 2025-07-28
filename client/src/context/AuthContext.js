@@ -1,13 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-// Create the context
 const AuthContext = createContext();
 
-// Create the provider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // null means not logged in
+  const [user, setUser] = useState(null); 
 
-  // Optional: load user from localStorage on page reload
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -17,7 +14,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData)); // persist login
+    localStorage.setItem('user', JSON.stringify(userData)); 
   };
 
   const logout = () => {
@@ -32,7 +29,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use AuthContext
 export const useAuth = () => {
   return useContext(AuthContext);
 };
