@@ -4,7 +4,6 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 pt-10 pb-6 mt-12">
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8">
-        {/* Product */}
         <div>
           <h4 className="font-semibold text-white mb-3">Product</h4>
           <ul className="space-y-1 text-sm">
@@ -15,7 +14,6 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Features */}
         <div>
           <h4 className="font-semibold text-white mb-3">Features</h4>
           <ul className="space-y-1 text-sm">
@@ -25,7 +23,6 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Company */}
         <div>
           <h4 className="font-semibold text-white mb-3">Company</h4>
           <ul className="space-y-1 text-sm">
@@ -35,7 +32,6 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Support */}
         <div>
           <h4 className="font-semibold text-white mb-3">Support</h4>
           <ul className="space-y-1 text-sm">
@@ -45,7 +41,6 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Connect */}
         <div>
           <h4 className="font-semibold text-white mb-3">Connect</h4>
           <ul className="space-y-1 text-sm">
