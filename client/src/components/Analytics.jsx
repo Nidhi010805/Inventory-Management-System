@@ -83,7 +83,6 @@ const handleLogsPDF = async () => {
 
   return (
     <div className="p-6 space-y-12 text-gray-100 bg-gray-900 rounded-lg shadow-lg max-w-6xl mx-auto">
-      {/* Category Pie Chart */}
       <section>
         <h2 className="text-2xl font-semibold mb-6">Category-wise Product Count</h2>
         <ResponsiveContainer width="100%" height={320}>
@@ -113,7 +112,6 @@ const handleLogsPDF = async () => {
         </ResponsiveContainer>
       </section>
 
-      {/* Low Stock Count Bar Chart */}
       <section>
         <h2 className="text-2xl font-semibold mb-6">Low Stock Count</h2>
         <ResponsiveContainer width="100%" height={280}>
@@ -139,7 +137,6 @@ const handleLogsPDF = async () => {
         </ResponsiveContainer>
       </section>
 
-      {/* Recent Activity Area Chart + Table */}
       <section>
         <h2 className="text-2xl font-semibold mb-6">Recent Activity (Last 7 Days)</h2>
         <ResponsiveContainer width="100%" height={300}>
@@ -187,7 +184,6 @@ const handleLogsPDF = async () => {
   </button>
 </div>
 
-        {/* Recent Activity Table */}
         <div  id="activity-table" className="mt-8 max-h-56 overflow-y-auto rounded-md border border-gray-700 bg-gray-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-700 sticky top-0">
